@@ -30,14 +30,20 @@ pipeline {
                     sh 'npm install' // Install dependencies if needed
                     sh 'npm run build' // Build your project if needed
                 }
-                deploy(
-                    adapters: [gitPublisher(
-                        branches: [[name: 'gh-pages']],
-                        credentialsId: '4fc3d5f5-e38a-45c0-9daf-adce760f2f12',
-                        repositoryName: 'XWebDev',
-                        targetDirectory: 'dist' // Adjust this to the appropriate build output directory
-                    )]
-                )
+                step([$class: 'Publisher',
+                      reportSuccess: true,
+                      alwaysPublishFromMaster: false,
+                      continueOnError: false,
+                      failOnError: true,
+                      publishers: [
+                          [$class: 'SSHPublisher',
+                           configName: 'your-ssh-config', // Configure this in Jenkins
+                           transfers: [
+                               [$class: 'Transfer', sourceFiles: 'dist/**', removePrefix: 'dist', remoteDirectory: '.']
+                           ]
+                          ]
+                      ]
+                ])
             }
         }
     }
